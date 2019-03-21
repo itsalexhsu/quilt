@@ -1,11 +1,11 @@
 import * as React from 'react';
 import {render, unmountComponentAtNode} from 'react-dom';
 import {act} from 'react-dom/test-utils';
-import {Props as PropsForComponent} from '@shopify/useful-types';
+import {Arguments} from '@shopify/useful-types';
 
 import {TestWrapper} from './TestWrapper';
-import {Element, Predicate, Comparable} from './element';
-import {Tag, Fiber, ReactInstance} from './types';
+import {Element, Predicate} from './element';
+import {Tag, Fiber, ReactInstance, FunctionKeys} from './types';
 
 // eslint-disable-next-line typescript/no-var-requires
 const {findCurrentFiberUsingSlowPath} = require('react-reconciler/reflection');
@@ -59,44 +59,6 @@ export class Root<Props> {
     return result;
   }
 
-  mount() {
-    if (this.mounted) {
-      throw new Error('Attempted to mount a node that was already mounted');
-    }
-
-    if (this.element.parentNode == null) {
-      document.body.appendChild(this.element);
-      connected.add(this);
-    }
-
-    this.perform(() => {
-      render(
-        <TestWrapper<Props>
-          ref={wrapper => {
-            this.wrapper = wrapper;
-          }}
-        >
-          {this.tree}
-        </TestWrapper>,
-        this.element,
-      );
-    });
-  }
-
-  is<Type extends React.ComponentType<any> | string>(
-    type: Type,
-  ): this is Root<PropsForComponent<Type>>;
-
-  is<Props>(type: React.ReactElement<Props>): this is Root<Props>;
-
-  is(type: Comparable): boolean {
-    return this.withRoot(root => root.is(type as any));
-  }
-
-  test(predicate: Predicate) {
-    return this.withRoot(root => root.test(predicate));
-  }
-
   html() {
     this.ensureRoot();
 
@@ -141,8 +103,35 @@ export class Root<Props> {
     return this.withRoot(root => root.getDOMNodes<Type>());
   }
 
-  contains(search: Comparable) {
-    return this.withRoot(root => root.contains(search));
+  trigger<K extends FunctionKeys<Props>>(
+    prop: K,
+    ...args: Arguments<Props[K]>
+  ) {
+    return this.withRoot(root => root.trigger(prop, ...args));
+  }
+
+  mount() {
+    if (this.mounted) {
+      throw new Error('Attempted to mount a node that was already mounted');
+    }
+
+    if (this.element.parentNode == null) {
+      document.body.appendChild(this.element);
+      connected.add(this);
+    }
+
+    this.perform(() => {
+      render(
+        <TestWrapper<Props>
+          ref={wrapper => {
+            this.wrapper = wrapper;
+          }}
+        >
+          {this.tree}
+        </TestWrapper>,
+        this.element,
+      );
+    });
   }
 
   unmount() {
@@ -172,7 +161,12 @@ export class Root<Props> {
     this.perform(() => this.wrapper!.setProps(props));
   }
 
-  update() {
+  forceUpdate() {
+    this.ensureRoot();
+    this.perform(() => this.wrapper!.forceUpdate());
+  }
+
+  private update() {
     if (this.wrapper == null) {
       this.root = null;
     } else {
@@ -181,15 +175,6 @@ export class Root<Props> {
         this,
       )[1] as Element<Props> | null;
     }
-  }
-
-  forceUpdate() {
-    this.ensureRoot();
-    this.perform(() => this.wrapper!.forceUpdate());
-  }
-
-  debug() {
-    return this.element.innerHTML;
   }
 
   private ensureRoot() {

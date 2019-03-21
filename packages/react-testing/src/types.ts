@@ -1,5 +1,11 @@
 import * as React from 'react';
 
+export type FunctionKeys<T> = {
+  [K in keyof T]-?: NonNullable<T[K]> extends ((...args: any[]) => any)
+    ? K
+    : never
+}[keyof T];
+
 // https://github.com/facebook/react/blob/master/packages/shared/ReactWorkTags.js
 export enum Tag {
   FunctionComponent = 0,
