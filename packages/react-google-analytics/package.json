@@ -31,6 +31,6 @@
   },
   "devDependencies": {
     "@shopify/enzyme-utilities": "^1.1.7",
-    "typescript": "~3.0.1"
+    "typescript": "~3.2.1"
   }
 }

@@ -30,7 +30,7 @@
     "react": "^16.0.0"
   },
   "devDependencies": {
-    "typescript": "~3.0.1"
+    "typescript": "~3.2.1"
   },
   "sideEffects": false
 }
