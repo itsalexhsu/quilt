@@ -1,7 +1,10 @@
 import * as React from 'react';
 import {render, unmountComponentAtNode} from 'react-dom';
 import {act} from 'react-dom/test-utils';
-import {Arguments} from '@shopify/useful-types';
+import {
+  Arguments,
+  MaybeFunctionReturnType as ReturnType,
+} from '@shopify/useful-types';
 
 import {TestWrapper} from './TestWrapper';
 import {Element, Predicate} from './element';
@@ -13,14 +16,6 @@ const {findCurrentFiberUsingSlowPath} = require('react-reconciler/reflection');
 export const connected = new Set<Root<unknown>>();
 
 export class Root<Props> {
-  get children() {
-    return this.withRoot(root => root.children);
-  }
-
-  get descendants() {
-    return this.withRoot(root => root.descendants);
-  }
-
   get props() {
     return this.withRoot(root => root.props);
   }
@@ -31,6 +26,22 @@ export class Root<Props> {
 
   get instance() {
     return this.withRoot(root => root.instance);
+  }
+
+  get children() {
+    return this.withRoot(root => root.children);
+  }
+
+  get descendants() {
+    return this.withRoot(root => root.descendants);
+  }
+
+  get domNodes() {
+    return this.withRoot(root => root.domNodes);
+  }
+
+  get domNode() {
+    return this.withRoot(root => root.domNode);
   }
 
   private wrapper: TestWrapper<Props> | null = null;
@@ -60,19 +71,11 @@ export class Root<Props> {
   }
 
   html() {
-    this.ensureRoot();
-
-    // Usually we defer to the root, but this is a quicker path
-    // if they only care about the root node
-    return this.element.innerHTML;
+    return this.withRoot(root => root.html());
   }
 
   text() {
-    this.ensureRoot();
-
-    // Usually we defer to the root, but this is a quicker path
-    // if they only care about the root node
-    return this.element.textContent || '';
+    return this.withRoot(root => root.text());
   }
 
   prop<K extends keyof Props>(key: K) {
@@ -95,19 +98,15 @@ export class Root<Props> {
     return this.withRoot(root => root.findAllWhere(predicate));
   }
 
-  getDOMNode<Type extends HTMLElement = HTMLElement>() {
-    return this.withRoot(root => root.getDOMNode<Type>());
-  }
-
-  getDOMNodes<Type extends HTMLElement = HTMLElement>() {
-    return this.withRoot(root => root.getDOMNodes<Type>());
-  }
-
-  trigger<K extends FunctionKeys<Props>>(
+  trigger<K extends string & FunctionKeys<Props>>(
     prop: K,
     ...args: Arguments<Props[K]>
-  ) {
+  ): ReturnType<NonNullable<Props[K]>> {
     return this.withRoot(root => root.trigger(prop, ...args));
+  }
+
+  triggerKeypath<T = unknown>(keypath: string, ...args: unknown[]) {
+    return this.withRoot(root => root.triggerKeypath<T>(keypath, ...args));
   }
 
   mount() {

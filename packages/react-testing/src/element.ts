@@ -42,6 +42,24 @@ export class Element<Props> {
     return this.elementDescendants;
   }
 
+  get domNodes(): HTMLElement[] {
+    return this.elementChildren
+      .filter(element => element.isDOM)
+      .map(element => element.instance);
+  }
+
+  get domNode(): HTMLElement | null {
+    const {domNodes} = this;
+
+    if (domNodes.length > 1) {
+      throw new Error(
+        'You can’t call getDOMNode() on an element that returns multiple HTML elements. Call getDOMNodes() to retrieve all of the elements instead.',
+      );
+    }
+
+    return domNodes[0] || null;
+  }
+
   private readonly elementChildren: Element<unknown>[];
   private readonly elementDescendants: Element<unknown>[];
 
@@ -65,7 +83,15 @@ export class Element<Props> {
   }
 
   text(): string {
-    const {instance, allChildren} = this;
+    const {
+      instance,
+      allChildren,
+      tree: {tag},
+    } = this;
+
+    if (tag === Tag.HostPortal) {
+      return '';
+    }
 
     if (instance instanceof HTMLElement) {
       return instance.textContent || '';
@@ -79,7 +105,15 @@ export class Element<Props> {
   }
 
   html(): string {
-    const {instance, allChildren} = this;
+    const {
+      instance,
+      allChildren,
+      tree: {tag},
+    } = this;
+
+    if (tag === Tag.HostPortal) {
+      return '';
+    }
 
     if (instance instanceof HTMLElement) {
       return instance.innerHTML;
@@ -108,35 +142,56 @@ export class Element<Props> {
   }
 
   findWhere(predicate: Predicate) {
-    return this.elementDescendants.find(predicate) || null;
+    return this.elementDescendants.find(element => predicate(element)) || null;
   }
 
   findAllWhere(predicate: Predicate) {
-    return this.elementDescendants.filter(predicate);
+    return this.elementDescendants.filter(element => predicate(element));
   }
 
-  getDOMNodes<Type extends HTMLElement = HTMLElement>(): Type[] {
-    return this.elementChildren
-      .filter(element => element.isDOM)
-      .map(element => element.instance);
-  }
-
-  getDOMNode<Type extends HTMLElement = HTMLElement>(): Type | null {
-    const domNodes = this.getDOMNodes<Type>();
-
-    if (domNodes.length > 1) {
-      throw new Error(
-        'You can’t call getDOMNode() on an element that returns multiple HTML elements. Call getDOMNodes() to retrieve all of the elements instead.',
-      );
-    }
-
-    return domNodes[0] || null;
-  }
-
-  trigger<K extends FunctionKeys<Props>>(
+  trigger<K extends string & FunctionKeys<Props>>(
     prop: K,
     ...args: Arguments<Props[K]>
   ): ReturnType<NonNullable<Props[K]>> {
-    return this.root.perform(() => (this.props[prop] as any)(...args));
+    return this.root.perform(() => {
+      const propValue = this.props[prop];
+
+      if (propValue == null) {
+        throw new Error(
+          `Attempted to call prop ${prop} but it was not defined.`,
+        );
+      }
+
+      return (propValue as any)(...args);
+    });
+  }
+
+  triggerKeypath<T = unknown>(keypath: string, ...args: unknown[]): T {
+    return this.root.perform(() => {
+      const {props} = this;
+      const parts = keypath.split(/[.[\]]/g).filter(Boolean);
+
+      let currentProp: any = props;
+      const currentKeypath: string[] = [];
+
+      for (const part of parts) {
+        if (currentProp == null || typeof currentProp !== 'object') {
+          throw new Error(
+            `Attempted to access field keypath '${currentKeypath.join(
+              '.',
+            )}', but it was not an object.`,
+          );
+        }
+
+        currentProp = currentProp[part];
+        currentKeypath.push(part);
+      }
+
+      if (typeof currentProp !== 'function') {
+        throw new Error(`Value at keypath '${keypath}' is not a function.`);
+      }
+
+      return currentProp(...args);
+    });
   }
 }

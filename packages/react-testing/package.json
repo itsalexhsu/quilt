@@ -23,9 +23,13 @@
     "url": "https://github.com/shopify/quilt/issues"
   },
   "homepage": "https://github.com/Shopify/quilt/blob/master/packages/react-testing/README.md",
-  "dependencies": {},
+  "dependencies": {
+    "react-reconciler": "^0.20.2"
+  },
   "devDependencies": {
     "typescript": "~3.0.1"
   },
-  "files": ["dist/*"]
+  "files": [
+    "dist/*"
+  ]
 }
