@@ -3,6 +3,7 @@ import {render, unmountComponentAtNode} from 'react-dom';
 import {act} from 'react-dom/test-utils';
 import {
   Arguments,
+  Props as PropsForComponent,
   MaybeFunctionReturnType as ReturnType,
 } from '@shopify/useful-types';
 
@@ -76,6 +77,12 @@ export class Root<Props> {
 
   text() {
     return this.withRoot(root => root.text());
+  }
+
+  is<Type extends React.ComponentType<any> | string>(
+    type: Type,
+  ): this is Root<PropsForComponent<Type>> {
+    return this.withRoot(root => root.is(type));
   }
 
   prop<K extends keyof Props>(key: K) {

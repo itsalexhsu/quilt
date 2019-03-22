@@ -126,6 +126,12 @@ export class Element<Props> {
     );
   }
 
+  is<Type extends React.ComponentType<any> | string>(
+    type: Type,
+  ): this is Element<PropsForComponent<Type>> {
+    return this.type === type;
+  }
+
   find<Type extends React.ComponentType<any> | string>(
     type: Type,
   ): Element<PropsForComponent<Type>> | null {

@@ -38,6 +38,7 @@ A `Root` object represents a mounted React tree. Most of the properties and meth
 - [#domNodes](#domNodes)
 - [#html()](#html)
 - [#text()](#text)
+- [#is()](#is)
 - [#prop()](#prop)
 - [#find()](#find)
 - [#findAll()](#findAll)
@@ -162,6 +163,22 @@ Returns the text content of the component. This is the string of text you would 
 #### <a name="html"></a> `html(): string`
 
 Returns the HTML content of the component. This is the string of text you would receive from mapping over each DOM node rendered as a descendant of this component and taking its `innerHTML`.
+
+#### <a name="is"></a> `is(type: Type): this is Element<PropsForComponent<Type>>`
+
+Returns a boolean indicating whether the component type matches the passed type. This function also serves as a type guard, so subsequent calls to values like `props` will be typed as the prop type of the passed component.
+
+```tsx
+function MyComponent({name}: {name: string}) {
+  return <div>Hello, {name}!</div>;
+}
+
+function isMatch(element: Element<unknown>) {
+  // If we omitted element.is here, we would not know whether 'name' was a prop,
+  // so we would get a type error.
+  return element.is(MyComponent) && element.prop('name') === 'Chris';
+}
+```
 
 #### <a name="find"></a> `find(type: Type): Element<PropsForComponent<Type>> | null`
 

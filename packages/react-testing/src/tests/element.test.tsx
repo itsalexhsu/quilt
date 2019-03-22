@@ -325,6 +325,30 @@ describe('Element', () => {
     });
   });
 
+  describe('#is()', () => {
+    it('is false if the type does not match', () => {
+      const element = new Element(
+        {...defaultTree, tag: Tag.HostComponent, type: 'div'},
+        [],
+        [],
+        defaultRoot,
+      );
+
+      expect(element.is(DummyComponent)).toBe(false);
+    });
+
+    it('is true if the type does match', () => {
+      const element = new Element(
+        {...defaultTree, tag: Tag.FunctionComponent, type: DummyComponent},
+        [],
+        [],
+        defaultRoot,
+      );
+
+      expect(element.is(DummyComponent)).toBe(true);
+    });
+  });
+
   describe('#find()', () => {
     it('finds the first matching DOM node', () => {
       const element = new Element(

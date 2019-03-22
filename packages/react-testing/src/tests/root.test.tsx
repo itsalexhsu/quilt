@@ -71,6 +71,7 @@ describe('Root', () => {
     expect(root.domNodes).toEqual(element.domNodes);
     expect(root.html()).toBe(element.html());
     expect(root.text()).toBe(element.text());
+    expect(root.is('div')).toBe(element.is('div'));
     expect(root.prop('aria-label')).toBe(element.prop('aria-label'));
     expect(root.find('div')).toBe(element.find('div'));
     expect(root.findAll('div')).toEqual(element.findAll('div'));
