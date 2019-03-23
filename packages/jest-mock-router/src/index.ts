@@ -78,5 +78,5 @@ export function createLocation(stubs?: Partial<FullLocation>): FullLocation {
       return JSON.stringify(this);
     },
     ...stubs,
-  };
+  } as FullLocation;
 }

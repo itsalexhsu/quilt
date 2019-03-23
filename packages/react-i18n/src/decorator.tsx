@@ -34,6 +34,11 @@ type TranslationMap = {
   [key: string]: MaybePromise<TranslationDictionary | undefined>;
 };
 
+type StaticFields<Object> = {
+  [Key in keyof Object]: Key extends 'prototype' ? never : Key
+}[keyof Object];
+export type Statics<Object> = Pick<Object, StaticFields<Object>>;
+
 export interface WithI18nOptions {
   id?: string;
   fallback?: TranslationDictionary;
@@ -57,7 +62,7 @@ const childContextTypes = {
 export function withI18n({id, fallback, translations}: WithI18nOptions = {}) {
   return function addI18n<OwnProps, C>(
     WrappedComponent: ReactComponent<OwnProps & WithI18nProps> & C,
-  ): ReactComponent<OwnProps> & C {
+  ): ReactComponent<OwnProps> & StaticFields<typeof WrappedComponent> {
     const name = id || getDisplayName(WrappedComponent);
 
     class WithTranslation extends React.Component<OwnProps, State> {
