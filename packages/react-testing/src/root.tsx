@@ -10,6 +10,7 @@ import {
 import {TestWrapper} from './TestWrapper';
 import {Element, Predicate} from './element';
 import {Tag, Fiber, ReactInstance, FunctionKeys} from './types';
+import {withIgnoredReactLogs} from './errors';
 
 // eslint-disable-next-line typescript/no-var-requires
 const {findCurrentFiberUsingSlowPath} = require('react-reconciler/reflection');
@@ -60,9 +61,11 @@ export class Root<Props> {
   perform<T>(action: () => T, {update = true} = {}): T {
     let result!: T;
 
-    act(() => {
-      result = action();
-    });
+    withIgnoredReactLogs(() =>
+      act(() => {
+        result = action();
+      }),
+    );
 
     if (update) {
       this.update();

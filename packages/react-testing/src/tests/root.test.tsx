@@ -214,4 +214,34 @@ describe('Root', () => {
       expect(perform).toHaveBeenCalled();
     });
   });
+
+  describe('errors', () => {
+    const Thrower: React.ComponentType = () => {
+      throw new Error('Something bad happened');
+    };
+
+    it('throws an error when a mounted component throws an error', () => {
+      expect(() => new Root(<Thrower />)).toThrowError(
+        'Something bad happened',
+      );
+    });
+
+    it('throws an error when updating to a component that throws an error', () => {
+      function MyComponent() {
+        const [renderThrower, setRenderThrower] = React.useState(false);
+
+        return renderThrower ? (
+          <Thrower />
+        ) : (
+          <button type="button" onClick={() => setRenderThrower(true)} />
+        );
+      }
+
+      const root = new Root(<MyComponent />);
+
+      expect(() =>
+        root.find('button')!.trigger('onClick', {} as any),
+      ).toThrowError('Something bad happened');
+    });
+  });
 });
