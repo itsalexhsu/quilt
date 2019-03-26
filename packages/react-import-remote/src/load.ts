@@ -5,7 +5,7 @@ export default function load<
   CustomWindow extends Window = Window
 >(
   source: string,
-  getImport: (window: CustomWindow) => Imported,
+  getImport: ((window: CustomWindow) => Imported) | undefined,
   nonce: string,
 ): Promise<Imported> {
   if (typeof window === 'undefined') {
@@ -27,7 +27,7 @@ export default function load<
     function scriptTagOnLoad() {
       scriptTag.removeEventListener('load', scriptTagOnLoad);
       scriptTag.removeEventListener('error', scriptTagOnError);
-      resolve(getImport(window as CustomWindow));
+      resolve(getImport && getImport(window as CustomWindow));
     }
 
     function scriptTagOnError(error: any) {

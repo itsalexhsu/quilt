@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {mount} from 'enzyme';
+import {mount} from '@shopify/react-testing';
 import {Preconnect} from '@shopify/react-html';
 import {noop} from '@shopify/javascript-utilities/other';
 
@@ -121,13 +121,13 @@ describe('<ImportRemote />', () => {
     it('does not render any preconnect link by default', () => {
       const importRemote = mount(<ImportRemote {...mockProps} />);
 
-      expect(importRemote.find(Preconnect)).toHaveLength(0);
+      expect(importRemote.findAll(Preconnect)).toHaveLength(0);
     });
 
     it('creates a preconnect link with the source’s origin when preconnecting is requested', () => {
       const importRemote = mount(<ImportRemote {...mockProps} preconnect />);
 
-      expect(importRemote.find(Preconnect).prop('source')).toBe(
+      expect(importRemote.find(Preconnect)!.prop('source')).toBe(
         new URL(mockProps.source).origin,
       );
     });
