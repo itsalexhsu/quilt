@@ -15,23 +15,29 @@ export interface Props<Imported = any> {
 
 export default function ImportRemote(props: Props) {
   const {source, preconnect, onError, onImported, nonce, getImport} = props;
-  const [loading, global, error] = useImportRemote(source, {nonce, getImport});
+  const {global, error} = useImportRemote(source, {nonce, getImport});
+
+  React.useEffect(
+    () => {
+      if (global) {
+        onImported(global);
+      }
+    },
+    [global],
+  );
+
+  React.useEffect(
+    () => {
+      if (error) {
+        onError(error);
+      }
+    },
+    [error],
+  );
 
   if (preconnect) {
     const url = new URL(source);
     return <Preconnect source={url.origin} />;
-  }
-
-  if (loading) {
-    return null;
-  }
-
-  if (error && onError) {
-    onError(error);
-  }
-
-  if (global && onImported) {
-    onImported(global);
   }
 
   return null;
