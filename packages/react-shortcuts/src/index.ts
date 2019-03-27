@@ -1,4 +1,8 @@
-export {default as Shortcut, Props as ShortcutProps} from './Shortcut';
+export {
+  default as Shortcut,
+  Props as ShortcutProps,
+  useShortcut,
+} from './Shortcut';
 
 export {
   default as ShortcutProvider,
