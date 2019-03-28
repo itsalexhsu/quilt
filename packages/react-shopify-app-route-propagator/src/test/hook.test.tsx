@@ -1,12 +1,18 @@
 import * as React from 'react';
-import {mount} from 'enzyme';
+import {mount} from '@shopify/react-testing';
 import {ClientApplication} from '@shopify/app-bridge';
 import {History as AppBridgeHistory} from '@shopify/app-bridge/actions';
+import {MODAL_IFRAME_NAME} from '../globals';
+import useRoutePropagation from '../hook';
 
-import RoutePropagator, {MODAL_IFRAME_NAME} from '..';
+function MockRoutePropagator({app, location}) {
+  useRoutePropagation(app, location);
+  return null;
+}
 
 jest.mock('../globals', () => {
   return {
+    ...require.requireActual('../globals'),
     getOrigin: jest.fn(),
     getTopWindow: jest.fn(),
     getSelfWindow: jest.fn(),
@@ -42,7 +48,7 @@ describe('@shopify/react-shopify-app-route-propagator', () => {
   it('dispatch a replace action on mount', () => {
     const path = '/settings';
 
-    mount(<RoutePropagator location={path} app={mockApp} />);
+    mount(<MockRoutePropagator location={path} app={mockApp} />);
 
     expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledTimes(1);
     expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledWith(
@@ -54,29 +60,47 @@ describe('@shopify/react-shopify-app-route-propagator', () => {
   it('dispatch a replace action when the location updates', () => {
     const firstPath = '/settings';
     const propagator = mount(
-      <RoutePropagator location={firstPath} app={mockApp} />,
+      <MockRoutePropagator location={firstPath} app={mockApp} />,
+    );
+
+    expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledTimes(1);
+    expect(appBridgeHistoryMock.dispatch).toHaveBeenLastCalledWith(
+      AppBridgeHistory.Action.REPLACE,
+      firstPath,
     );
 
     const secondPath = '/foo';
     propagator.setProps({location: secondPath});
-    propagator.update();
 
     expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledTimes(2);
-    expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledWith(
-      AppBridgeHistory.Action.REPLACE,
-      firstPath,
-    );
-    expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledWith(
+    expect(appBridgeHistoryMock.dispatch).toHaveBeenLastCalledWith(
       AppBridgeHistory.Action.REPLACE,
       secondPath,
     );
+  });
+
+  it('does not dispatch a replace action when the location updates but the value stay the same', () => {
+    const firstPath = '/settings';
+    const propagator = mount(
+      <MockRoutePropagator location={firstPath} app={mockApp} />,
+    );
+
+    expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledTimes(1);
+    expect(appBridgeHistoryMock.dispatch).toHaveBeenLastCalledWith(
+      AppBridgeHistory.Action.REPLACE,
+      firstPath,
+    );
+
+    propagator.setProps({location: firstPath});
+
+    expect(appBridgeHistoryMock.dispatch).toHaveBeenCalledTimes(1);
   });
 
   describe('when window is window.top', () => {
     it('does not dispatch a replace action on mount', () => {
       getSelfWindow.mockImplementation(() => topWindow);
 
-      mount(<RoutePropagator location="/settings" app={mockApp} />);
+      mount(<MockRoutePropagator location="/settings" app={mockApp} />);
 
       expect(appBridgeHistoryMock.dispatch).not.toBeCalled();
     });
@@ -85,12 +109,11 @@ describe('@shopify/react-shopify-app-route-propagator', () => {
       getSelfWindow.mockImplementation(() => topWindow);
 
       const propagator = mount(
-        <RoutePropagator location="/settings" app={mockApp} />,
+        <MockRoutePropagator location="/settings" app={mockApp} />,
       );
 
       const path = '/foo';
       propagator.setProps({location: path});
-      propagator.update();
 
       expect(appBridgeHistoryMock.dispatch).not.toBeCalled();
     });
@@ -101,7 +124,7 @@ describe('@shopify/react-shopify-app-route-propagator', () => {
       getSelfWindow.mockImplementation(() => ({
         name: MODAL_IFRAME_NAME,
       }));
-      mount(<RoutePropagator location="/settings" app={mockApp} />);
+      mount(<MockRoutePropagator location="/settings" app={mockApp} />);
 
       expect(appBridgeHistoryMock.dispatch).not.toBeCalled();
     });
@@ -112,11 +135,10 @@ describe('@shopify/react-shopify-app-route-propagator', () => {
       }));
 
       const propagator = mount(
-        <RoutePropagator location="/settings" app={mockApp} />,
+        <MockRoutePropagator location="/settings" app={mockApp} />,
       );
 
       propagator.setProps({location: '/foo'});
-      propagator.update();
 
       expect(appBridgeHistoryMock.dispatch).not.toBeCalled();
     });
