@@ -18,7 +18,7 @@ export default function useShortcut(
   onMatch: (matched: {ordered: Key[]; held?: HeldKey}) => void,
   options: Options = {},
 ) {
-  const context = React.useContext(ShortcutContext);
+  const shortcutManager = React.useContext(ShortcutContext);
   const subscription = React.useRef<Subscription | null>(null);
 
   React.useEffect(
@@ -28,11 +28,11 @@ export default function useShortcut(
         return;
       }
 
-      if (context.shortcutManager == null) {
+      if (shortcutManager == null) {
         return;
       }
 
-      subscription.current = context.shortcutManager.subscribe({
+      subscription.current = shortcutManager.subscribe({
         onMatch,
         ordered,
         node,
@@ -50,6 +50,6 @@ export default function useShortcut(
         subscription.current.unsubscribe();
       };
     },
-    [ordered],
+    [ordered, onMatch, options],
   );
 }
